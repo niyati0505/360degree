@@ -1,85 +1,28 @@
+"use client"
+
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Calendar, MapPin, Clock, Users, Bell } from "lucide-react"
+import React, { useEffect, useState } from "react"
 
-const allEvents = [
-  {
-    id: 3,
-    title: "Saga Dawa Festival",
-    date: "2024-06-22",
-    time: "04:00 AM",
-    location: "Tashiding Monastery",
-    description:
-      "Sacred month celebration marking Buddha's birth, enlightenment, and parinirvana with special prayers and rituals.",
-    image: "/saga-dawa-festival-prayer-flags-pilgrims.jpg",
-    type: "Pilgrimage",
-    attendees: "800+",
-    status: "upcoming",
-  },
-  {
-    id: 4,
-    title: "Pang Lhabsol Festival",
-    date: "2024-08-15",
-    time: "07:00 AM",
-    location: "Enchey Monastery",
-    description: "Traditional festival honoring Mount Kanchenjunga with masked dances and warrior performances.",
-    image: "/placeholder.svg?key=panglhabsol",
-    type: "Cultural",
-    attendees: "600+",
-    status: "upcoming",
-  },
-  {
-    id: 5,
-    title: "Drukpa Kunley Festival",
-    date: "2024-06-10",
-    time: "06:30 AM",
-    location: "Druk Sangag Choling Monastery",
-    description: "Celebration honoring the Divine Madman with traditional performances and teachings.",
-    image: "/placeholder.svg?key=drukpa",
-    type: "Religious",
-    attendees: "400+",
-    status: "upcoming",
-  },
-  {
-    id: 6,
-    title: "Lhabab Duchen",
-    date: "2024-11-12",
-    time: "05:00 AM",
-    location: "Multiple Monasteries",
-    description: "Commemoration of Buddha's descent from heaven with special prayers and offerings.",
-    image: "/placeholder.svg?key=lhabab",
-    type: "Religious",
-    attendees: "1000+",
-    status: "upcoming",
-  },
-  {
-    id: 7,
-    title: "Drupka Teshi",
-    date: "2024-07-20",
-    time: "06:00 AM",
-    location: "Rumtek Monastery",
-    description: "Celebration of Buddha's first teaching with scripture readings and discussions.",
-    image: "/placeholder.svg?key=drupka",
-    type: "Religious",
-    attendees: "500+",
-    status: "upcoming",
-  },
-  {
-    id: 8,
-    title: "Tendong Lho Rum Faat",
-    date: "2024-08-08",
-    time: "08:00 AM",
-    location: "Tendong Hill",
-    description: "Traditional Lepcha festival celebrating the sacred Tendong Hill with cultural performances.",
-    image: "/placeholder.svg?key=tendong",
-    type: "Cultural",
-    attendees: "300+",
-    status: "upcoming",
-  },
-]
+type Event = {
+  id: number
+  title: string
+  date: string
+  time: string
+  location: string
+  description: string
+  image?: string
+  type: string
+  attendees?: string
+  status?: string
+}
 
-const getEventTypeColor = (type: string) => {
+const getEventTypeColor = (type?: string) => {
+  if (!type || typeof type !== "string") {
+    return "bg-muted text-muted-foreground"
+  }
   switch (type.toLowerCase()) {
     case "festival":
       return "bg-primary text-primary-foreground"
@@ -95,6 +38,28 @@ const getEventTypeColor = (type: string) => {
 }
 
 export function EventsList() {
+  const [events, setEvents] = useState<Event[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function fetchEvents() {
+      setLoading(true)
+      setError(null)
+      try {
+        const res = await fetch("/api/events")
+        if (!res.ok) throw new Error("Failed to fetch events")
+        const data = await res.json()
+        setEvents(data)
+      } catch (err: any) {
+        setError(err.message || "Unknown error")
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchEvents()
+  }, [])
+
   return (
     <section>
       <div className="mb-6">
@@ -102,8 +67,11 @@ export function EventsList() {
         <p className="text-muted-foreground">Complete calendar of monastery events and festivals</p>
       </div>
 
+      {loading && <div className="text-center text-muted-foreground">Loading events...</div>}
+      {error && <div className="text-center text-red-500">{error}</div>}
+
       <div className="space-y-4">
-        {allEvents.map((event) => (
+        {events.map((event) => (
           <Card key={event.id} className="hover:shadow-md transition-shadow">
             <CardContent className="p-6">
               <div className="flex flex-col md:flex-row gap-4">
